@@ -36,12 +36,12 @@ class PaymentController {
             return ResponseEntity.badRequest().build();
         }
 
-        PaymentIntent paymentIntent = stripeService.capturePayment(order.getCaptureTransactionId());
-
-        if (paymentIntent == null) {
-            return ResponseEntity.status(502).build(); // Bad Gateway if Stripe call fails
-        } else {
-            return ResponseEntity.ok(new PaymentIntentDTO(paymentIntent)); // Return the payment intent details
+        try {
+            PaymentIntent paymentIntent = stripeService.capturePayment(order.getCaptureTransactionId());
+            return ResponseEntity.ok(new PaymentIntentDTO(paymentIntent));
+        } catch (RuntimeException e) {
+            // Logs are already in the service, but you can log again here if you want context
+            return ResponseEntity.status(502).body(null);
         }
     }
 
