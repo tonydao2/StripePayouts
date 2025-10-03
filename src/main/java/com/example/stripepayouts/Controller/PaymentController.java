@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
  */
 @RestController
 @RequestMapping("/api/payment")
-class PaymentController {
+public class PaymentController {
 
     private final StripeService stripeService;
 
