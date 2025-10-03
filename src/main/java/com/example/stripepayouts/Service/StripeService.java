@@ -3,6 +3,7 @@ package com.example.stripepayouts.Service;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCaptureParams;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class StripeService {
             log.info("Attempting to capture payment with ID: {}", captureTransactionId);
             PaymentIntent intent = PaymentIntent.retrieve(captureTransactionId);
             log.info("Successfully retrieved PaymentIntent: {}", intent.getId());
-            return intent;
+            return intent.capture();
         } catch (StripeException e) {
             log.error("Failed to retrieve PaymentIntent for ID: {}", captureTransactionId, e);
             throw new RuntimeException("Stripe payment capture failed", e);
