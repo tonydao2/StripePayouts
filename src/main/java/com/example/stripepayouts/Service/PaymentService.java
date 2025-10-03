@@ -21,21 +21,21 @@ public class PaymentService {
         this.infigoService = infigoService;
     }
 
-    public PaymentIntentDTO processPayment(OrderlineDTO orderline) {
-        if (orderline.getStatus() != 23) {
+    public PaymentIntentDTO processPayment(OrderlineDTO orderLine) {
+        if (orderLine.getStatus() != 23) {
             // Only process if status is Approved (23) else ignore
-            log.info("Ignoring orderline with status {}. Only processing status 23 (Approved).", orderline.getStatus());
+            log.info("Ignoring orderLine with status {}. Only processing status 23 (Approved).", orderLine.getStatus());
             return null;
         }
 
-        log.info("Processing orderline with status {}.", orderline.getStatus());
-        OrderDTO order = infigoService.getOrder(orderline);
+        log.info("Processing ordeLine with status {}.", orderLine.getStatus());
+        OrderDTO order = infigoService.getOrder(orderLine);
         if (order == null) {
-            log.warn("No order found for orderline with CustomerId={}", orderline.getCustomerId());
+            log.warn("No order found for orderLine with CustomerId={}", orderLine.getCustomerId());
             return null;
         }
 
-        log.info("Found order with ID={} for orderline with CustomerId={}", order.getId(), orderline.getCustomerId());
+        log.info("Found order with ID={} for orderLine with CustomerId={}", order.getId(), orderLine.getCustomerId());
 
         if (order.getCaptureTransactionId() == null) {
             log.warn("Order with ID={} does not have a CaptureTransactionId. Cannot process payment.", order.getId());
