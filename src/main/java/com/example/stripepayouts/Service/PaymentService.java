@@ -28,7 +28,7 @@ public class PaymentService {
             return null;
         }
 
-        log.info("Processing ordeLine with status {}.", orderLine.getStatus());
+        log.info("Processing orderLine with status {}.", orderLine.getStatus());
         OrderDTO order = infigoService.getOrder(orderLine);
         if (order == null) {
             log.warn("No order found for orderLine with CustomerId={}", orderLine.getCustomerId());
@@ -38,12 +38,14 @@ public class PaymentService {
         log.info("Found order with ID={} for orderLine with CustomerId={}", order.getId(), orderLine.getCustomerId());
 
         if (order.getCaptureTransactionId() == null) {
+            // Nothing to capture
             log.warn("Order with ID={} does not have a CaptureTransactionId. Cannot process payment.", order.getId());
             return null;
         }
 
+        // TODO: Store the payment intent detail into a Database table
         try {
-            PaymentIntent paymentIntent = stripeService.capturePayment(order.getCaptureTransactionId());
+            PaymentIntent paymentIntent = stripeService.capturePayment(order);
             return new PaymentIntentDTO(paymentIntent);
         } catch (RuntimeException e) {
             log.error("Stripe capture failed for transactionId={}", order.getCaptureTransactionId(), e);
