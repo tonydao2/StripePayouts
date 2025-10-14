@@ -4,6 +4,7 @@ import com.example.stripepayouts.Controller.PaymentController;
 import com.example.stripepayouts.DTO.OrderDTO;
 import com.example.stripepayouts.DTO.OrderlineDTO;
 import com.example.stripepayouts.DTO.PaymentIntentDTO;
+import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,9 @@ public class PaymentService {
         } catch (RuntimeException e) {
             log.error("Stripe capture failed for transactionId={}", order.getCaptureTransactionId(), e);
             throw e;
+        } catch (StripeException e) {
+            log.error("Stripe API error while capturing payment for transactionId={}", order.getCaptureTransactionId(), e);
+            throw new RuntimeException("Stripe capture failed", e);
         }
     }
 }

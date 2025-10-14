@@ -3,7 +3,9 @@ package com.example.stripepayouts.Service;
 import com.example.stripepayouts.DTO.OrderDTO;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
+import com.stripe.model.ChargeCollection;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Charge;
 import com.stripe.param.PaymentIntentCaptureParams;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -23,13 +25,25 @@ public class StripeService {
      * @throws RuntimeException if Stripe API call fails
      */
     // probably need to pass in OrderDTO to add metadata instead of just captureTransactionId
-    public PaymentIntent capturePayment(OrderDTO order) {
+    public PaymentIntent capturePayment(OrderDTO order) throws StripeException {
         // TODO: Add metadata to the payment intent with orderId and customerId
         try {
             log.info("Attempting to capture payment with ID: {}", order.getCaptureTransactionId());
             PaymentIntent intent = PaymentIntent.retrieve(order.getCaptureTransactionId());
             log.info("Successfully retrieved PaymentIntent: {}", intent.getId());
-            return intent.capture();
+
+            PaymentIntent captured = intent.capture();
+
+            // TODO: Get balance transaction id from payment intent and use to get available on
+
+            return captured;
+        } catch (com.stripe.exception.InvalidRequestException e) {
+            if ("payment_intent_unexpected_state".equals(e.getCode())) {
+                log.warn("Payment already captured for ID: {}", order.getCaptureTransactionId());
+                return PaymentIntent.retrieve(order.getCaptureTransactionId());
+            } else {
+                throw e;
+            }
         } catch (StripeException e) {
             log.error("Failed to retrieve PaymentIntent for ID: {}", order.getCaptureTransactionId(), e);
             throw new RuntimeException("Stripe payment capture failed", e);
