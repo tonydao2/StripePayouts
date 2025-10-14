@@ -35,8 +35,8 @@ public class PaymentController {
 
     // Manual Trigger
     @PostMapping("/processPayment")
-    public ResponseEntity<PaymentIntentDTO> processPayment(@RequestBody OrderlineDTO orderline) {try {
-            PaymentIntentDTO result = paymentService.processPayment(orderline);
+    public ResponseEntity<PaymentIntentDTO> processPayment(@RequestBody OrderlineDTO orderLine) {try {
+            PaymentIntentDTO result = paymentService.processPayment(orderLine);
             if (result == null) {
                 return ResponseEntity.badRequest().build();
             }

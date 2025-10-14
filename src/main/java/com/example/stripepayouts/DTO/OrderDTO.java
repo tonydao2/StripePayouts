@@ -1,5 +1,4 @@
 package com.example.stripepayouts.DTO;
-import com.example.stripepayouts.DTO.OrderlineDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,5 +24,5 @@ public class OrderDTO {
     private double orderTotal; // Infigo API returns OrderTotal as an integer but we can use double for more flexibility
 
     @JsonProperty("OrderLineItems")
-    private List<String> orderlineitems;
+    private List<String> orderLineItems;
 }

@@ -5,7 +5,6 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import com.example.stripepayouts.DTO.OrderDTO;
 import org.springframework.web.client.RestClient;
@@ -13,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class InfigoService {
@@ -77,10 +75,10 @@ public class InfigoService {
                         .body(OrderDTO.class);
 
 
-                if (order != null && order.getOrderlineitems() != null) {
-                    log.debug("Order {} contains {} orderlines", orderId, order.getOrderlineitems().size());
+                if (order != null && order.getOrderLineItems() != null) {
+                    log.debug("Order {} contains {} orderlines", orderId, order.getOrderLineItems().size());
 
-                    boolean match = order.getOrderlineitems().stream()
+                    boolean match = order.getOrderLineItems().stream()
                             .anyMatch(line -> line.equals(orderline.getId().toString()));
 
                     if (match) {
