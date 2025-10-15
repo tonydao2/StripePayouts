@@ -21,7 +21,6 @@ public class StripeService {
      * @return PaymentIntent object after capturing the payment
      * @throws RuntimeException if Stripe API call fails
      */
-    // probably need to pass in OrderDTO to add metadata instead of just captureTransactionId
     public PaymentIntent capturePayment(OrderDTO order) throws StripeException {
         try {
             log.info("Attempting to capture payment with ID: {}", order.getCaptureTransactionId());
@@ -63,5 +62,21 @@ public class StripeService {
             log.error("Failed to retrieve PaymentIntent for ID: {}", order.getCaptureTransactionId(), e);
             throw new RuntimeException("Stripe payment capture failed", e);
         }
+    }
+
+    /***
+     * Placeholder for future payout functionality
+     * @return null for now
+     * @throws StripeException if Stripe API call fails
+     *
+     * Idea is to create a webhook that listens for balance.available events from Stripe
+     * When we get that event we can check our database for any orders that have availableOn
+     * date that is less than or equal to the current date and if status on DB is not paid out
+     * then we can create a payout to our connected account with the metadata from the charge
+     * so we can add orderId and orderTotal to the description of the payout
+     */
+    public void Payout() {
+        // To be implemented
+
     }
 }
