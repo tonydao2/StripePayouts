@@ -1,13 +1,17 @@
 package com.example.stripepayouts.Service;
 
 import com.example.stripepayouts.DTO.OrderDTO;
+import com.example.stripepayouts.DTO.OrderlineDTO;
 import com.stripe.exception.StripeException;
 import com.stripe.model.BalanceTransaction;
 import com.stripe.model.Charge;
 import com.stripe.model.PaymentIntent;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,8 +21,8 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class StripeServiceTest {
 
@@ -43,11 +47,20 @@ public class StripeServiceTest {
     @Test
     void testCapturePayment() {
         // Replace with a real test PaymentIntent ID from Stripe
-        String testPaymentIntentId = "pi_3SICDdIOwGRLFxh81b6w5EYy";
+        OrderlineDTO item1 = new OrderlineDTO();
+        item1.setId("1");
+        item1.setName("12JKGFPP");
+        OrderlineDTO item2 = new OrderlineDTO();
+        item2.setId("2");
+        item2.setName("SPF15951");
+        String testPaymentIntentId = "pi_3SIZU1IOwGRLFxh81PsH7smp";
         log.info("Api Key:  " + com.stripe.Stripe.apiKey);
 
         OrderDTO order = new OrderDTO();
+        order.setId(12706L);
         order.setCaptureTransactionId(testPaymentIntentId);
+        order.setOrderLineItems(Arrays.asList(item1, item2));
+        order.setOrderTotal(42.50);
 
         try {
             PaymentIntent captured = stripeService.capturePayment(order);
@@ -59,12 +72,7 @@ public class StripeServiceTest {
             log.info("Latest Charge ID: {}", charge.getId());
 
             // Add metadata to the charge so we can later us during payout to add to description
-            Map<String, String> newMetadata = new HashMap<>(charge.getMetadata());
-            newMetadata.put("orderId", "233322");
-            newMetadata.put("orderTotal", "99.99");
-
-            Map<String, Object> updateParams = new HashMap<>();
-            updateParams.put("metadata", newMetadata);
+            Map<String, Object> updateParams = getStringObjectMap(charge, order);
             charge = charge.update(updateParams);
 
             // TODO: Store orderId and orderTotal and availableOn in database for future reference
@@ -86,5 +94,29 @@ public class StripeServiceTest {
         } catch (RuntimeException e) {
             log.error("Runtime error: {}", e.getMessage());
         }
+    }
+
+    private static @NotNull Map<String, Object> getStringObjectMap(Charge charge, OrderDTO order) {
+        Map<String, String> newMetadata = new HashMap<>(charge.getMetadata());
+        newMetadata.put("orderId", order.getId().toString());
+        newMetadata.put("orderTotal", String.valueOf(order.getOrderTotal()));
+
+        // Add names of all items in the order to metadata
+        StringBuilder itemNames = new StringBuilder();
+        for (OrderlineDTO item : order.getOrderLineItems()) {
+            String name = item.getName();
+            if (name != null && !name.isEmpty()) {
+                if (!itemNames.isEmpty()) {
+                    itemNames.append(", ");
+                }
+                itemNames.append(name);
+            }
+        }
+
+        newMetadata.put("itemNames", itemNames.toString());
+
+        Map<String, Object> updateParams = new HashMap<>();
+        updateParams.put("metadata", newMetadata);
+        return updateParams;
     }
 }

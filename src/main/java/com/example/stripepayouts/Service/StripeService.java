@@ -1,10 +1,13 @@
 package com.example.stripepayouts.Service;
 
 import com.example.stripepayouts.DTO.OrderDTO;
+import com.example.stripepayouts.DTO.OrderlineDTO;
 import com.stripe.Stripe;
+import com.stripe.exception.InvalidRequestException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
 import com.stripe.model.BalanceTransaction;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,14 +35,10 @@ public class StripeService {
             // This gets the charge id we just captured
             Charge charge = Charge.retrieve(captured.getLatestCharge());
             log.info("Charge ID: {}", charge.getId());
+            // Store charge id in database so we can get the metadata later when we do payout
 
             // Add metadata to the charge so we can later us during payout to add to description
-            Map<String, String> newMetadata = new HashMap<>(charge.getMetadata());
-            newMetadata.put("orderId", order.getId().toString());
-            newMetadata.put("orderTotal", String.valueOf(order.getOrderTotal()));
-
-            Map<String, Object> updateParams = new HashMap<>();
-            updateParams.put("metadata", newMetadata);
+            Map<String, Object> updateParams = buildChargeMetadata(order, charge);
             charge = charge.update(updateParams);
 
             // TODO: Store orderId and orderTotal and availableOn in database for future reference
@@ -51,7 +50,7 @@ public class StripeService {
 
 
             return captured;
-        } catch (com.stripe.exception.InvalidRequestException e) {
+        } catch (InvalidRequestException e) {
             if ("payment_intent_unexpected_state".equals(e.getCode())) {
                 log.warn("Payment already captured for ID: {}", order.getCaptureTransactionId());
                 return PaymentIntent.retrieve(order.getCaptureTransactionId());
@@ -64,9 +63,34 @@ public class StripeService {
         }
     }
 
+    // Helper method to create metadata map for updating charge
+    private static @NotNull Map<String, Object> buildChargeMetadata(OrderDTO order, Charge charge) {
+        Map<String, String> newMetadata = new HashMap<>(charge.getMetadata());
+        newMetadata.put("orderId", order.getId().toString());
+        newMetadata.put("orderTotal", String.valueOf(order.getOrderTotal()));
+
+        // Add names of all items in the order to metadata
+        StringBuilder itemNames = new StringBuilder();
+        for (OrderlineDTO item : order.getOrderLineItems()) {
+            String name = item.getName();
+            if (name != null && !name.isEmpty()) {
+                if (!itemNames.isEmpty()) {
+                    itemNames.append(", ");
+                }
+                itemNames.append(name);
+            }
+        }
+
+        newMetadata.put("itemNames", itemNames.toString());
+
+        Map<String, Object> updateParams = new HashMap<>();
+        updateParams.put("metadata", newMetadata);
+        return updateParams;
+    }
+
     /***
-     * Placeholder for future payout functionality
-     * @return null for now
+     * Schedulder calls this to process any available payouts
+     * @return void
      * @throws StripeException if Stripe API call fails
      *
      * Idea is to create a webhook that listens for balance.available events from Stripe
@@ -75,8 +99,7 @@ public class StripeService {
      * then we can create a payout to our connected account with the metadata from the charge
      * so we can add orderId and orderTotal to the description of the payout
      */
-    public void Payout() {
+    public void processPayout() {
         // To be implemented
-
     }
 }
