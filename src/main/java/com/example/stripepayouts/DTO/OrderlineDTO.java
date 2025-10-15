@@ -19,4 +19,7 @@ public class OrderlineDTO {
 
     @JsonProperty("Status")
     private int status;
+
+    @JsonProperty("Name")
+    private String name;
 }

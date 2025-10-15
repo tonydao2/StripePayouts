@@ -24,5 +24,5 @@ public class OrderDTO {
     private double orderTotal; // Infigo API returns OrderTotal as an integer but we can use double for more flexibility
 
     @JsonProperty("OrderLineItems")
-    private List<String> orderLineItems;
+    private List<OrderlineDTO> orderLineItems;
 }
