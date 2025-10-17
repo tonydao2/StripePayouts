@@ -22,6 +22,9 @@ public class StripePayout {
     @Column(name = "customer_id")
     private Integer customerId;
 
+    @Column(name = "payout_sent", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean payoutSent = false;
+
     public StripePayout() {}
 
     public StripePayout(LocalDateTime balanceAvailableOn, Integer orderId, Double orderTotal, Integer customerId) {
